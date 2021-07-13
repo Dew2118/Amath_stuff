@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 from itertools import permutations, chain 
+import cProfile
+import re
+
 
 @dataclass
 class Piece:
@@ -40,12 +43,15 @@ Pmuldiv = Piece('*/',['*','/'])
 Pblank = Piece('BLANK',['*','/','+','-','0','1','2','3','4','5','6','7','8','9','10',
 '11','12','13','14','15','16','17','18','19','20','=='])
 
+pattern = r"^-*\d+([+-/*]\d+)*==-*\d+([+-/*]\d+)*$"
+EQ_PATTERN = re.compile(pattern)
+
 def search_valid_equation(piece_list):
     result = []
     for func_list in get_all_func_list(piece_list):
         # print('funclist= ', func_list)
         result.extend(sub_search_valid_equation(func_list))
-    print('result is ',set(result))
+    # print('result is ',set(result))
     return set(result)
 
 def get_all_func_list(piece_list):
@@ -66,17 +72,34 @@ def product(*args, repeat=1):
         yield tuple(prod)
 
 def sub_search_valid_equation(func_list):
+    
     result = []
     permute = permutations(func_list)
+    all = 0
+    c = 0
     for equation in permute:
+        all += 1
         eq_str = ''.join(equation)
+        # print(eq_str)
+        # break
         if '**' in eq_str:
             continue
+        if eq_str[0] in ['+','*','/','=']:
+            continue
+        if eq_str[-1] in ['+','-','*','/','=']:
+            continue
+        # print(eq_str)
+        if not re.match(EQ_PATTERN, eq_str):
+            continue
         try:
+            c += 1
             if eval(eq_str):
                 result.append(eq_str)
+                print(eq_str)
         except SyntaxError:
             pass
+        
+    print(f'all = {all} c = {c}')
     return result
 
 def flatten(list_of_lists):
@@ -84,18 +107,18 @@ def flatten(list_of_lists):
     return chain.from_iterable(list_of_lists)
 
 # test eval equation
-# expect return value as ['1==1']
-assert len(search_valid_equation([P1,Pequal,P1])) == 1 
-# expect return value as an empty list
-assert len(search_valid_equation([P1,Pequal,P2])) == 0
-# expect return value as ['1+2==3', '3==1+2', '3==2+1', '2+1==3']
-assert len(search_valid_equation([Pplus,P1,P3,Pequal,P2])) == 4
-assert len(search_valid_equation([Pplusminus,P1,P3,Pequal,P2])) == 8
-assert len(search_valid_equation([Pmuldiv,P6,P3,Pequal,P2])) == 8
-assert len(search_valid_equation([Pplusminus,Pplusminus,P4,P1,P3,Pequal,P2])) == 48
-assert len(search_valid_equation([Pplus,Pblank,P3,Pequal,P2])) == 8
+# # expect return value as ['1==1']
+# assert len(search_valid_equation([P1,Pequal,P1])) == 1 
+# # expect return value as an empty list
+# assert len(search_valid_equation([P1,Pequal,P2])) == 0
+# # expect return value as ['1+2==3', '3==1+2', '3==2+1', '2+1==3']
+# assert len(search_valid_equation([Pplus,P1,P3,Pequal,P2])) == 4
+# assert len(search_valid_equation([Pplusminus,P1,P3,Pequal,P2])) == 8
+# assert len(search_valid_equation([Pmuldiv,P6,P3,Pequal,P2])) == 8
+# assert len(search_valid_equation([Pplusminus,Pplusminus,P4,P1,P3,Pequal,P2])) == 48
+# assert len(search_valid_equation([Pplus,Pblank,P3,Pequal,P2])) == 8
 
-AMATH_set = [[P0]*5, [P4]*5, [P8]*4, [P12]*2, [P16], [P20], [Pmul]*4, [Pdiv]*4, [Pplus]*4,[Pminus]*4,[P1]*6,[P5]*4,[P9]*4,[P13],[P17],[P2]*6,[P6]*4,[P10]*2, [P14], [P18], [P3]*5, [P7]*4, [P11], [P15], [P19], [Pplusminus]*5, [Pmuldiv] * 4, [Pequal]*11, [Pblank]*4]
-pieces = list(flatten(AMATH_set))
+# AMATH_set = [[P0]*5, [P4]*5, [P8]*4, [P12]*2, [P16], [P20], [Pmul]*4, [Pdiv]*4, [Pplus]*4,[Pminus]*4,[P1]*6,[P5]*4,[P9]*4,[P13],[P17],[P2]*6,[P6]*4,[P10]*2, [P14], [P18], [P3]*5, [P7]*4, [P11], [P15], [P19], [Pplusminus]*5, [Pmuldiv] * 4, [Pequal]*11, [Pblank]*4]
+# pieces = list(flatten(AMATH_set))
 # print(len(pieces))
-print(search_valid_equation([Pplus,Pmuldiv,P3,Pequal,P2,P9,P2,Pmul,P1]))
+cProfile.run('search_valid_equation([Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1])')
