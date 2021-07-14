@@ -256,24 +256,33 @@ class Strategy7(Strategy1):
         for equation in permute:
             all += 1
             eq_str = ''.join(equation)
+            #check if ** (which is the exponent symbol in python) is in there because it is not allowed in A-math
             if '**' in eq_str:
                 continue
+            #check if the first character is a symbol
             if eq_str[0] in ['+','-','*','/','=']:
                 continue
+            #check if the first character is a symbol
             if eq_str[-1] in ['+','-','*','/','=']:
                 continue
+            #find the index of the first '=' sign
             i = eq_str.find('=')
+            #check if the character in front of '=' is a symbol
             if eq_str[i-1] in ['+','-','*','/','=']:
                 continue
             #in case index of i (=) + 2 is more than the lenght of the equation
             if i+2 < len(eq_str):
+                #check if the character in behind of '==' is a symbol
                 if eq_str[i+2] in ['+','-','*','/','=']:
                     continue
+            #check if the character in behind of a symbol is a symbol
             if not self.check(eq_str, ['+','*','/','-']):
                 continue
+            #check if the expression matched which is that if there are leading 0s(0 is allowed but 03 or 0005 is not)
             if not re.match(EQ_PATTERN, eq_str):
                 continue
             c += 1
+            #check if the equation is true
             if eval(eq_str):
                 result.append(eq_str)
         self.all = all
