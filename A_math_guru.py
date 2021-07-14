@@ -258,16 +258,17 @@ class Strategy7(Strategy1):
             eq_str = ''.join(equation)
             if '**' in eq_str:
                 continue
-            i = eq_str.find('=')
             if eq_str[0] in ['+','-','*','/','=']:
                 continue
+            if eq_str[-1] in ['+','-','*','/','=']:
+                continue
+            i = eq_str.find('=')
             if eq_str[i-1] in ['+','-','*','/','=']:
                 continue
+            #in case index of i (=) + 2 is more than the lenght of the equation
             if i+2 < len(eq_str):
                 if eq_str[i+2] in ['+','-','*','/','=']:
                     continue
-            if eq_str[-1] in ['+','-','*','/','=']:
-                continue
             if not self.check(eq_str, ['+','*','/','-']):
                 continue
             if not re.match(EQ_PATTERN, eq_str):
@@ -308,17 +309,15 @@ def flatten(list_of_lists):
 if __name__ == '__main__':
     piece_list = [Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1]
     strategy_list = []
-    strategy_list.append(Strategy1())
-    strategy_list.append(Strategy2())
-    strategy_list.append(Strategy3())
-    strategy_list.append(Strategy4())
-    strategy_list.append(Strategy5())
-    strategy_list.append(Strategy6())
+    # strategy_list.append(Strategy1())
+    # strategy_list.append(Strategy2())
+    # strategy_list.append(Strategy3())
+    # strategy_list.append(Strategy4())
+    # strategy_list.append(Strategy5())
+    # strategy_list.append(Strategy6())
     strategy_list.append(Strategy7())
-    # strategy = Strategy2()
-    # strategy.search_valid_equation(piece_list)
     standard = Strategy1(False).search_valid_equation(piece_list)
     for s in strategy_list:
         r = s.search_valid_equation(piece_list)
         assert r == standard
-# cProfile.run('search_valid_equation([Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1])')
+cProfile.run('Strategy7().search_valid_equation([Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1])')
