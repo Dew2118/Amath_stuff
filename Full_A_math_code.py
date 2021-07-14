@@ -125,12 +125,16 @@ def flatten(list_of_lists):
     "Flatten one level of nesting"
     return chain.from_iterable(list_of_lists)
 
+def is_valid_equation(eq):
+    return (re.match(EQ_PATTERN, eq))
+
 pieces = list(flatten([[P0]*5, [P4]*5, [P8]*4, [P12]*2, [P16], [P20], [Pmul]*4, [Pdiv]*4, [Pplus]*4,[Pminus]*4,[P1]*6,[P5]*4,[P9]*4,[P13],[P17],[P2]*6,[P6]*4,[P10]*2, [P14], [P18], [P3]*5, [P7]*4, [P11], [P15], [P19], [Pplusminus]*5, [Pmuldiv] * 4, [Pequal]*11, [Pblank]*4]))
 combi = combinations(pieces,9)
 c = 0
 last_c = 0
 last_set = []
 strategy = Strategy(False)
+
 while True:
   a = list(next(combi))
   last_set = a.copy()
