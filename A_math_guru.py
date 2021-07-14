@@ -43,7 +43,7 @@ Pmuldiv = Piece('*/',['*','/'])
 Pblank = Piece('BLANK',['*','/','+','-','0','1','2','3','4','5','6','7','8','9','10',
 '11','12','13','14','15','16','17','18','19','20','=='])
 
-pattern = r'^-*([0-9]|[1-9][0-9]*)([+-/*]([0-9]|[1-9][0-9]*))*==-*([0-9]|[1-9][0-9]*)([+-/*]([0-9]|[1-9][0-9]*))*$'
+pattern = r'^-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*==-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*$'
 EQ_PATTERN = re.compile(pattern)
 class Strategy1:
     def __init__(self, measure_time_lapse = True) -> None:
@@ -255,16 +255,20 @@ class Strategy7(Strategy1):
         c = 0
         for equation in permute:
             all += 1
+            if equation[0] in ['+','-','*','/','=']:
+                continue
+            #check if the first character is a symbol
+            # print(equation)
+            if equation[-1] in ['+','-','*','/','=']:
+                continue
+            if not self.check_for_double(equation):
+                continue
+            #check if the first character is a symbol
             eq_str = ''.join(equation)
             #check if ** (which is the exponent symbol in python) is in there because it is not allowed in A-math
             if '**' in eq_str:
                 continue
-            #check if the first character is a symbol
-            if eq_str[0] in ['+','-','*','/','=']:
-                continue
-            #check if the first character is a symbol
-            if eq_str[-1] in ['+','-','*','/','=']:
-                continue
+            
             #find the index of the first '=' sign
             i = eq_str.find('=')
             #check if the character in front of '=' is a symbol
@@ -284,6 +288,7 @@ class Strategy7(Strategy1):
             c += 1
             #check if the equation is true
             if eval(eq_str):
+                print(equation)
                 result.append(eq_str)
         self.all = all
         self.c = c
@@ -294,6 +299,17 @@ class Strategy7(Strategy1):
             i = str.find(constant)
             if str[i+1] in ['+','-','*','/','=']:
                 return False
+        return True
+#WHY IS THIS BROKEN??????
+    def check_for_double(self,equation):
+        for i,p in enumerate(equation):
+            if len(p) == 2 and p != '==':
+                if i + 1 < len(equation):
+                    if equation[i + 1] in list('0123456789'):
+                        return False
+                if i - 1 <= 0:
+                    if equation[i - 1] in list('0123456789'):
+                        return False
         return True
 
 def flatten(list_of_lists):
@@ -316,7 +332,8 @@ def flatten(list_of_lists):
 # pieces = list(flatten(AMATH_set))
 # print(len(pieces))
 if __name__ == '__main__':
-    piece_list = [Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1]
+    # piece_list = [Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1]
+    piece_list = [P1,P14,Pplus,P5,Pequal,P1,P19,P0,Pplus]
     strategy_list = []
     # strategy_list.append(Strategy1())
     # strategy_list.append(Strategy2())
@@ -328,5 +345,6 @@ if __name__ == '__main__':
     standard = Strategy1(False).search_valid_equation(piece_list)
     for s in strategy_list:
         r = s.search_valid_equation(piece_list)
+        print(r)
         assert r == standard
 cProfile.run('Strategy7().search_valid_equation([Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1])')
