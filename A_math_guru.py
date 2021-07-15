@@ -3,45 +3,55 @@ from itertools import permutations, chain
 import cProfile
 import re
 from datetime import datetime
+from enum import Enum
+
+class PieceType(Enum):
+    SYMBOL = 1
+    MULTI_SYMBOL = 2
+    SINGLE_DIGIT = 3
+    DOUBLE_DIGIT = 4
+    EQUAL_SIGN = 5
+    BLANK = 6
 
 @dataclass
 class Piece:
   name: str
   function: list
+  type: PieceType
 
 # CONSTANT
 # All pieces
-P0 = Piece('0',['0'])
-P1 = Piece('1',['1'])
-P2 = Piece('2',['2'])
-P3 = Piece('3',['3'])
-P4 = Piece('4',['4'])
-P5 = Piece('5',['5'])
-P6 = Piece('6',['6'])
-P7 = Piece('7',['7'])
-P8 = Piece('8',['8'])
-P9 = Piece('9',['9'])
-P10 = Piece('10',['10'])
-P11 = Piece('11',['11'])
-P12 = Piece('12',['12'])
-P13 = Piece('13',['13'])
-P14 = Piece('14',['14'])
-P15 = Piece('15',['15'])
-P16 = Piece('16',['16'])
-P17 = Piece('17',['17'])
-P18 = Piece('18',['18'])
-P19 = Piece('19',['19'])
-P20 = Piece('20',['20'])
-Pequal = Piece('=',['=='])
-Pplus = Piece('+',['+'])
-Pminus = Piece('-',['-'])
-Pplusminus = Piece('+/-',['+','-'])
-Pmul = Piece('*',['*'])
-Pdiv = Piece('/',['/'])
-Pmuldiv = Piece('*/',['*','/'])
+P0 = Piece('0',['0'],PieceType.SINGLE_DIGIT)
+P1 = Piece('1',['1'],PieceType.SINGLE_DIGIT)
+P2 = Piece('2',['2'],PieceType.SINGLE_DIGIT)
+P3 = Piece('3',['3'],PieceType.SINGLE_DIGIT)
+P4 = Piece('4',['4'],PieceType.SINGLE_DIGIT)
+P5 = Piece('5',['5'],PieceType.SINGLE_DIGIT)
+P6 = Piece('6',['6'],PieceType.SINGLE_DIGIT)
+P7 = Piece('7',['7'],PieceType.SINGLE_DIGIT)
+P8 = Piece('8',['8'],PieceType.SINGLE_DIGIT)
+P9 = Piece('9',['9'],PieceType.SINGLE_DIGIT)
+P10 = Piece('10',['10'],PieceType.DOUBLE_DIGIT)
+P11 = Piece('11',['11'],PieceType.DOUBLE_DIGIT)
+P12 = Piece('12',['12'],PieceType.DOUBLE_DIGIT)
+P13 = Piece('13',['13'],PieceType.DOUBLE_DIGIT)
+P14 = Piece('14',['14'],PieceType.DOUBLE_DIGIT)
+P15 = Piece('15',['15'],PieceType.DOUBLE_DIGIT)
+P16 = Piece('16',['16'],PieceType.DOUBLE_DIGIT)
+P17 = Piece('17',['17'],PieceType.DOUBLE_DIGIT)
+P18 = Piece('18',['18'],PieceType.DOUBLE_DIGIT)
+P19 = Piece('19',['19'],PieceType.DOUBLE_DIGIT)
+P20 = Piece('20',['20'],PieceType.DOUBLE_DIGIT)
+Pequal = Piece('=',['=='],PieceType.EQUAL_SIGN)
+Pplus = Piece('+',['+'],PieceType.SYMBOL)
+Pminus = Piece('-',['-'],PieceType.SYMBOL)
+Pplusminus = Piece('+/-',['+','-'],PieceType.MULTI_SYMBOL)
+Pmul = Piece('*',['*'],PieceType.SYMBOL)
+Pdiv = Piece('/',['/'],PieceType.SYMBOL)
+Pmuldiv = Piece('*/',['*','/'],PieceType.MULTI_SYMBOL)
 #blank can be all of the pieces
 Pblank = Piece('BLANK',['*','/','+','-','0','1','2','3','4','5','6','7','8','9','10',
-'11','12','13','14','15','16','17','18','19','20','=='])
+'11','12','13','14','15','16','17','18','19','20','=='],PieceType.BLANK)
 
 pattern = r'^-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*==-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*$'
 EQ_PATTERN = re.compile(pattern)
@@ -302,6 +312,7 @@ class Strategy7(Strategy1):
         return True
 #WHY IS THIS BROKEN??????
     def check_for_double(self,equation):
+        # input - equation as tuple or list
         for i,p in enumerate(equation):
             if len(p) == 2 and p != '==':
                 if i + 1 < len(equation):
