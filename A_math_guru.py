@@ -55,6 +55,8 @@ Pblank = Piece('BLANK',['*','/','+','-','0','1','2','3','4','5','6','7','8','9',
 
 pattern = r'^-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*==-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*$'
 EQ_PATTERN = re.compile(pattern)
+
+
 class Strategy1:
     def __init__(self, measure_time_lapse = True) -> None:
         self.measure_time_lapse = measure_time_lapse
@@ -63,7 +65,7 @@ class Strategy1:
         timestamp = datetime.timestamp(datetime.now())
         result = []
         for func_list in self.get_all_func_list(piece_list):
-            result.extend(self.sub_search_valid_equation(func_list))
+            result.extend(self.sub_search_valid_equation(func_list, piece_list))
         if self.measure_time_lapse:
             print('\n', self.__class__.__name__)
             print(f'{round(datetime.timestamp(datetime.now()) - timestamp,3)} seconds')
@@ -82,7 +84,7 @@ class Strategy1:
         for prod in result:
             yield tuple(prod)
 
-    def sub_search_valid_equation(self,func_list):
+    def sub_search_valid_equation(self, func_list, piece_list):
         result = []
         permute = permutations(func_list)
         all = 0
@@ -101,9 +103,7 @@ class Strategy1:
         return result
 
     def get_all_func_list(self,piece_list):
-        func_list = []
-        for p in piece_list:
-            func_list.append(p.function)
+        func_list = [p.function for p in piece_list]
         return self.product(*func_list)
 
 
@@ -162,7 +162,7 @@ class Strategy3(Strategy1):
 
 
 class Strategy4(Strategy1):
-    def sub_search_valid_equation(self,func_list):
+    def sub_search_valid_equation(self, func_list, piece_list):
         result = []
         permute = permutations(func_list)
         all = 0
@@ -187,9 +187,10 @@ class Strategy4(Strategy1):
         self.all = all
         self.c = c
         return result
-    
+
+
 class Strategy5(Strategy1):
-    def sub_search_valid_equation(self,func_list):
+    def sub_search_valid_equation(self, func_list, piece_list):
         result = []
         permute = permutations(func_list)
         all = 0
@@ -220,7 +221,7 @@ class Strategy5(Strategy1):
 
 
 class Strategy6(Strategy1):
-    def sub_search_valid_equation(self,func_list):
+    def sub_search_valid_equation(self, func_list, piece_list):
         result = []
         permute = permutations(func_list)
         all = 0
@@ -253,33 +254,29 @@ class Strategy6(Strategy1):
         self.c = c
         return result
 
-    
-        
-
 
 class Strategy7(Strategy1):
-    def sub_search_valid_equation(self,func_list):
+    def sub_search_valid_equation(self,func_list, piece_list):
         result = []
         permute = permutations(func_list)
         all = 0
         c = 0
         for equation in permute:
             all += 1
+
             # equation cannot start with symbols except minus sign.
+
             if equation[0] in ['+','*','/','=']:
                 continue
             #check if the first character is a symbol
             # print(equation)
             if equation[-1] in ['+','-','*','/','=']:
                 continue
-            if not self.check_for_double(equation):
-                continue
             #check if the first character is a symbol
-            eq_str = ''.join(equation)
             #check if ** (which is the exponent symbol in python) is in there because it is not allowed in A-math
-            if '**' in eq_str:
+            if '**' in equation:
                 continue
-            
+            eq_str = ''.join(equation)
             #find the index of the first '=' sign
             i = eq_str.find('=')
             #check if the character in front of '=' is a symbol
@@ -288,7 +285,7 @@ class Strategy7(Strategy1):
             #in case index of i (=) + 2 is more than the lenght of the equation
             if i+2 < len(eq_str):
                 #check if the character in behind of '==' is a symbol
-                if eq_str[i+2] in ['+','-','*','/','=']:
+                if eq_str[i+2] in ['+','*','/','=']:
                     continue
             #check if the character in behind of a symbol is a symbol
             if not self.check(eq_str, ['+','*','/','-']):
@@ -296,10 +293,11 @@ class Strategy7(Strategy1):
             #check if the expression matched which is that if there are leading 0s(0 is allowed but 03 or 0005 is not)
             if not re.match(EQ_PATTERN, eq_str):
                 continue
+            if not self.check_for_double(piece_list):
+                continue
             c += 1
             #check if the equation is true
             if eval(eq_str):
-                print(equation)
                 result.append(eq_str)
         self.all = all
         self.c = c
@@ -311,41 +309,22 @@ class Strategy7(Strategy1):
             if str[i+1] in ['+','-','*','/','=']:
                 return False
         return True
-#WHY IS THIS BROKEN??????
+
     def check_for_double(self,equation):
         # input - equation as tuple or list
-        for i,p in enumerate(equation):
-            if len(p) == 2 and p != '==':
-                if i + 1 < len(equation):
-                    if equation[i + 1] in list('0123456789'):
-                        return False
-                if i - 1 <= 0:
-                    if equation[i - 1] in list('0123456789'):
-                        return False
+        for i in range(len(equation) - 1):
+            if equation[i].type.name == 'DOUBLE_DIGIT' and (equation[i+1].type.name == "SINGLE_DIGIT" or  equation[i-1].type.name == "SINGLE_DIGIT"):
+                return False
         return True
 
 def flatten(list_of_lists):
     "Flatten one level of nesting"
     return chain.from_iterable(list_of_lists)
 
-# test eval equation
-# # expect return value as ['1==1']
-# assert len(search_valid_equation([P1,Pequal,P1])) == 1 
-# # expect return value as an empty list
-# assert len(search_valid_equation([P1,Pequal,P2])) == 0
-# # expect return value as ['1+2==3', '3==1+2', '3==2+1', '2+1==3']
-# assert len(search_valid_equation([Pplus,P1,P3,Pequal,P2])) == 4
-# assert len(search_valid_equation([Pplusminus,P1,P3,Pequal,P2])) == 8
-# assert len(search_valid_equation([Pmuldiv,P6,P3,Pequal,P2])) == 8
-# assert len(search_valid_equation([Pplusminus,Pplusminus,P4,P1,P3,Pequal,P2])) == 48
-# assert len(search_valid_equation([Pplus,Pblank,P3,Pequal,P2])) == 8
 
-# AMATH_set = [[P0]*5, [P4]*5, [P8]*4, [P12]*2, [P16], [P20], [Pmul]*4, [Pdiv]*4, [Pplus]*4,[Pminus]*4,[P1]*6,[P5]*4,[P9]*4,[P13],[P17],[P2]*6,[P6]*4,[P10]*2, [P14], [P18], [P3]*5, [P7]*4, [P11], [P15], [P19], [Pplusminus]*5, [Pmuldiv] * 4, [Pequal]*11, [Pblank]*4]
-# pieces = list(flatten(AMATH_set))
-# print(len(pieces))
 if __name__ == '__main__':
     # piece_list = [Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1]
-    piece_list = [P1,P14,Pplus,P5,Pequal,P1,P19,P0,Pplus]
+    piece_list =[Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1]
     strategy_list = []
     # strategy_list.append(Strategy1())
     # strategy_list.append(Strategy2())
