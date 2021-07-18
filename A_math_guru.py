@@ -265,7 +265,8 @@ class Strategy7(Strategy1):
         c = 0
         for equation in permute:
             all += 1
-            if equation[0] in ['+','-','*','/','=']:
+            # equation cannot start with symbols except minus sign.
+            if equation[0] in ['+','*','/','=']:
                 continue
             #check if the first character is a symbol
             # print(equation)
@@ -357,5 +358,10 @@ if __name__ == '__main__':
     for s in strategy_list:
         r = s.search_valid_equation(piece_list)
         print(r)
-        assert r == standard
-cProfile.run('Strategy7().search_valid_equation([Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1])')
+        try:
+            assert r == standard
+        except AssertionError:
+            print('Error')
+            print('current strategy result = ',r)
+            print('standard requlst =', standard)
+# cProfile.run('Strategy7().search_valid_equation([Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1])')
