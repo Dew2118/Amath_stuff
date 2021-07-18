@@ -55,6 +55,8 @@ Pblank = Piece('BLANK',['*','/','+','-','0','1','2','3','4','5','6','7','8','9',
 
 pattern = r'^-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*==-*([0-9]|[1-9][0-9]{1,2})([+-/*]([0-9]|[1-9][0-9]{1,2}))*$'
 EQ_PATTERN = re.compile(pattern)
+
+
 class Strategy1:
     def __init__(self, measure_time_lapse = True) -> None:
         self.measure_time_lapse = measure_time_lapse
@@ -101,9 +103,7 @@ class Strategy1:
         return result
 
     def get_all_func_list(self,piece_list):
-        func_list = []
-        for p in piece_list:
-            func_list.append(p.function)
+        func_list = [p.function for p in piece_list]
         return self.product(*func_list)
 
 
@@ -187,7 +187,8 @@ class Strategy4(Strategy1):
         self.all = all
         self.c = c
         return result
-    
+
+
 class Strategy5(Strategy1):
     def sub_search_valid_equation(self, func_list, piece_list):
         result = []
@@ -253,9 +254,6 @@ class Strategy6(Strategy1):
         self.c = c
         return result
 
-    
-        
-
 
 class Strategy7(Strategy1):
     def sub_search_valid_equation(self,func_list, piece_list):
@@ -265,18 +263,17 @@ class Strategy7(Strategy1):
         c = 0
         for equation in permute:
             all += 1
-            if equation[0] in ['+','-','*','/','=']:
+            if equation[0] in ['+','*','/','=']:
                 continue
             #check if the first character is a symbol
             # print(equation)
             if equation[-1] in ['+','-','*','/','=']:
                 continue
             #check if the first character is a symbol
-            eq_str = ''.join(equation)
             #check if ** (which is the exponent symbol in python) is in there because it is not allowed in A-math
-            if '**' in eq_str:
+            if '**' in equation:
                 continue
-            
+            eq_str = ''.join(equation)
             #find the index of the first '=' sign
             i = eq_str.find('=')
             #check if the character in front of '=' is a symbol
@@ -285,7 +282,7 @@ class Strategy7(Strategy1):
             #in case index of i (=) + 2 is more than the lenght of the equation
             if i+2 < len(eq_str):
                 #check if the character in behind of '==' is a symbol
-                if eq_str[i+2] in ['+','-','*','/','=']:
+                if eq_str[i+2] in ['+','*','/','=']:
                     continue
             #check if the character in behind of a symbol is a symbol
             if not self.check(eq_str, ['+','*','/','-']):
