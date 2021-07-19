@@ -12,6 +12,7 @@ class PieceType(Enum):
     DOUBLE_DIGIT = 4
     EQUAL_SIGN = 5
     BLANK = 6
+    NEGATIVE = 7
 
 @dataclass
 class Piece:
@@ -44,7 +45,7 @@ P19 = Piece('19',['19'],PieceType.DOUBLE_DIGIT)
 P20 = Piece('20',['20'],PieceType.DOUBLE_DIGIT)
 Pequal = Piece('=',['=='],PieceType.EQUAL_SIGN)
 Pplus = Piece('+',['+'],PieceType.SYMBOL)
-Pminus = Piece('-',['-'],PieceType.SYMBOL)
+Pminus = Piece('-',['-'],[PieceType.NEGATIVE])
 Pplusminus = Piece('+/-',['+','-'],PieceType.MULTI_SYMBOL)
 Pmul = Piece('*',['*'],PieceType.SYMBOL)
 Pdiv = Piece('/',['/'],PieceType.SYMBOL)
@@ -61,9 +62,8 @@ class Strategy:
     def search_valid_equation(self, piece_list):
         result = []
         for piece_type_list in self.get_all_piece_type_list(piece_list):
-            if self.check_valid(piece_type_list):
-                print(piece_type_list)
-            # result.extend(self.sub_search_valid_equation(func_list, piece_list))
+            a = self.create_equation(self.check_valid(piece_type_list), piece_list)
+            print(list(a))
 
     def product(self,*args, repeat=1):
         # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
@@ -72,46 +72,104 @@ class Strategy:
         pools = [arg for arg in args]
         result = [[]]
         for pool in pools:
-            result = [x+[y] for x in result for y in pool if len(y) > 1]
+            result = [x+[y] for x in result for y in pool]
         for prod in result:
             yield tuple(prod)
 
     def get_all_piece_type_list(self,piece_list):
-        func_list = [p.type.name for p in piece_list]
-        return self.product(*func_list)
+        return self.product(*[[p.type.name] for p in piece_list])
 
-    def check_valid(self,piece_type_list, piece_list):
+    def check_valid(self,piece_type_list):
         result = []
         permute = permutations(piece_type_list)
         all = 0
         c = 0
+        
         for equation in permute:
+            # print(equation)
             all += 1
-            if equation[0] in ['SYMBOL','EQUAL']:
+            if equation[0] in ['SYMBOL','EQUAL_SIGN']:
                 continue
             #check if the first character is a symbol
             # print(equation)
-            if equation[-1] in ['SYMBOL','EQUAL']:
+            if equation[-1] in ['SYMBOL','EQUAL_SIGN','NEGATIVE']:
                 continue
             #check if the first character is a symbol
             #check if ** (which is the exponent symbol in python) is in there because it is not allowed in A-math
             if '**' in equation:
                 continue
             #find the index of the first '=' sign
-            i = equation.find('EQUAL')
+            if 'EQUAL_SIGN' not in equation:
+                continue
+            i = equation.index('EQUAL_SIGN')
             #check if the character in front of '=' is a symbol
-            if equation[i-1] in ['SYMBOL','EQUAL']:
+            if equation[i-1] in ['SYMBOL','EQUAL_SIGN','NEGATIVE']:
                 continue
             #in case index of i (=) + 2 is more than the lenght of the equation
             if i+1 < len(equation):
                 #check if the character in behind of '==' is a symbol
-                if equation[i+2] in ['+','*','/','=']:
+                if equation[i+1] in ['SYMBOL','EQUAL_SIGN']:
                     continue
             #check if the character in behind of a symbol is a symbol
-            if not self.check(equation, 'SYMBOL'):
+            if not self.check(equation, ['SYMBOL','NEGATIVE']):
                 continue
             #check if the expression matched which is that if there are leading 0s(0 is allowed but 03 or 0005 is not)
-            if not self.check_for_double(piece_list):
+            if not self.check_for_double(piece_type_list):
                 continue
+            result.append(equation)
+        return result
+
+    def check(self,tuple,constant_list):
+        for i in range(len(tuple) - 1):
+            if tuple[i] in constant_list and tuple[i+1] in ['SYMBOL','NEGATIVE','EQUAL_SIGN']:
+                return False
+        return True
+
+    def check_for_double(self,equation):
+        # input - equation as tuple or list
+        for i in range(len(equation) - 1):
+            if equation[i] == 'DOUBLE_DIGIT' and (equation[i+1] == "SINGLE_DIGIT" or  equation[i-1] == "SINGLE_DIGIT"):
+                return False
+        return True
+
+    def create_equation(self,piece_type_list, piece_list):
+        # print(piece_type_list)
+        # print(((p.function for p in t) for t in self.permutations(piece_list, piece_type_list)))
+        print('HERE')
+        return self.permutations(self.product(*[p for p in piece_list]), piece_type_list)
+
+    def permutations(self, iterable, piece_type_list, r=None):
+        # permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
+        # permutations(range(3)) --> 012 021 102 120 201 210
+        pool = tuple(iterable)
+        n = len(pool)
+        print(pool)
+        r = n if r is None else r
+        if r > n:
+            return
+        indices = list(range(n))
+        cycles = list(range(n, n-r, -1))
+        result = tuple(pool[i] for i in indices[:r])[0]
+        print(result)
+        ptloresult = tuple(p.type.name for p in result)
+        if ptloresult in piece_type_list:
+            yield result
+        while n:
+            for i in reversed(range(r)):
+                cycles[i] -= 1
+                if cycles[i] == 0:
+                    indices[i:] = indices[i+1:] + indices[i:i+1]
+                    cycles[i] = n - i
+                else:
+                    j = cycles[i]
+                    indices[i], indices[-j] = indices[-j], indices[i]
+                    result = tuple(pool[i] for i in indices[:r])
+                    ptloresult = tuple(p.type.name for p in result)
+                    if ptloresult in piece_type_list:
+                        yield result
+                    break
+            else:
+                return
+        print('NO')
 
 Strategy().search_valid_equation([Pplus,Pdiv,P3,Pequal,P2,P9,P2,Pmul,P1])
